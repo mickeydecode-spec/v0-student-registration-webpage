@@ -1,0 +1,632 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                     DREAM MORE PLATFORM - ARCHITECTURE                     ║
+║                         System Design & Data Flow                          ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HIGH-LEVEL SYSTEM ARCHITECTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                          ┌─────────────────────┐
+                          │   Dream More Core   │
+                          │  Two-Tier Platform  │
+                          └─────────────────────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    │                               │
+        ┌───────────▼──────────┐       ┌───────────▼──────────┐
+        │   PUBLIC TIER        │       │   ADMIN TIER         │
+        │ (User Registration)  │       │  (Management)        │
+        └──────────────────────┘       └──────────────────────┘
+                    │                               │
+         ┌──────────▼──────────┐       ┌──────────▼──────────┐
+         │  Homepage (/)       │       │  Admin Panel        │
+         │  ├─ Header          │       │  ├─ Dashboard       │
+         │  ├─ Form            │       │  ├─ Courses         │
+         │  ├─ Course Select   │       │  ├─ Registrations   │
+         │  ├─ Submit Button   │       │  └─ Settings        │
+         │  └─ Footer          │       └─────────────────────┘
+         └─────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMPONENT HIERARCHY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ROOT LAYOUT
+  └─ layout.tsx
+     ├─ Global Styles
+     ├─ Fonts & Themes
+     └─ Metadata
+
+     ├─ PUBLIC PAGES
+     │  └─ page.tsx (/)
+     │     ├─ Header
+     │     ├─ Hero Section
+     │     ├─ RegistrationFormSimple
+     │     │  ├─ Personal Info Fields
+     │     │  ├─ Course Dropdown
+     │     │  └─ Submit Button
+     │     ├─ Features Section
+     │     └─ Footer
+     │
+     └─ ADMIN PAGES
+        ├─ AdminLayout
+        │  ├─ Sidebar Navigation
+        │  ├─ Header Bar
+        │  └─ {children}
+        │
+        ├─ /admin/page.tsx
+        │  └─ AdminDashboardOverview
+        │     ├─ Statistics Cards
+        │     └─ Quick Actions
+        │
+        ├─ /admin/manage-courses/page.tsx
+        │  └─ CourseManagement
+        │     ├─ Add Course Form
+        │     ├─ Course List
+        │     ├─ Edit Modal
+        │     └─ Delete Confirmation
+        │
+        ├─ /admin/registrations/page.tsx
+        │  └─ AdminDashboard
+        │     ├─ Registrations Table
+        │     ├─ Search Filter
+        │     ├─ Edit Modal
+        │     └─ Delete Confirmation
+        │
+        └─ /admin/settings/page.tsx
+           └─ AdminSettings
+              ├─ Configuration Form
+              ├─ Contact Info
+              └─ Email Settings
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATA FLOW - USER REGISTRATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. USER VISITS HOMEPAGE
+   ┌─────────────────────────────────────────────────────────┐
+   │ User navigates to: http://localhost:3000/              │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Homepage loads:                                         │
+   │  ├─ Fetch courses from /api/courses                    │
+   │  ├─ Display in Course dropdown                         │
+   │  └─ Show registration form                             │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Components Rendered:                                    │
+   │  ├─ Header with logo                                   │
+   │  ├─ Hero section                                       │
+   │  ├─ RegistrationFormSimple                             │
+   │  │  ├─ 8 text/input fields                             │
+   │  │  ├─ 1 dropdown (courses)                            │
+   │  │  └─ Submit button                                   │
+   │  ├─ Features highlight                                 │
+   │  └─ Footer                                             │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+                     ▼
+        [User sees clean registration form]
+
+2. USER SELECTS COURSE FROM DROPDOWN
+   ┌─────────────────────────────────────────────────────────┐
+   │ User clicks Course Dropdown                             │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Available courses displayed:                            │
+   │  ├─ Web Development (WEB101)                           │
+   │  ├─ Graphics Design (GFX101)                           │
+   │  ├─ Digital Marketing (MKT101)                         │
+   │  └─ ... (all courses from API)                         │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+                     ▼
+        [User selects a course, description shows]
+
+3. USER SUBMITS FORM
+   ┌─────────────────────────────────────────────────────────┐
+   │ User fills all fields and clicks "Complete Registration"│
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Client-Side Validation:                                 │
+   │  ✓ First Name required                                 │
+   │  ✓ Last Name required                                  │
+   │  ✓ Email format valid                                  │
+   │  ✓ Phone required                                      │
+   │  ✓ Date of Birth required                              │
+   │  ✓ Gender selected                                     │
+   │  ✓ Address required                                    │
+   │  ✓ City required                                       │
+   │  ✓ Course selected                                     │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+                     ▼ [If valid]
+   ┌─────────────────────────────────────────────────────────┐
+   │ POST /api/registrations                                │
+   │ {                                                       │
+   │   first_name: "John",                                  │
+   │   last_name: "Doe",                                    │
+   │   email: "john@example.com",                           │
+   │   phone: "+1234567890",                                │
+   │   date_of_birth: "1990-01-15",                         │
+   │   gender: "male",                                      │
+   │   address: "123 Main St",                              │
+   │   city: "Addis Ababa",                                 │
+   │   courses: [1]                                         │
+   │ }                                                       │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Backend Processing:                                     │
+   │  1. Validate all data server-side                      │
+   │  2. Check email uniqueness                             │
+   │  3. Insert into students table                         │
+   │  4. Return success response                            │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Database Update:                                        │
+   │  INSERT INTO students (                                │
+   │    first_name, last_name, email, phone,                │
+   │    date_of_birth, gender, address, city, courses       │
+   │  ) VALUES (...)                                         │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Success Response:                                       │
+   │  ✓ Registration successful                             │
+   │  ✓ Show success toast notification                     │
+   │  ✓ Clear form fields                                   │
+   │  ✓ Allow new registration                              │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+                     ▼
+        [User sees success message]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATA FLOW - ADMIN COURSE MANAGEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ADMIN ADDS COURSE
+   ┌─────────────────────────────────────────────────────────┐
+   │ Admin navigates to: /admin/manage-courses               │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Page loads:                                             │
+   │  ├─ AdminLayout renders (sidebar + header)             │
+   │  ├─ Fetch courses from /api/courses                    │
+   │  └─ Display CourseManagement component                 │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Admin fills form:                                       │
+   │  ├─ Course Code: "WEB101"                              │
+   │  ├─ Course Name: "Web Development"                     │
+   │  ├─ Description: "Learn modern web technologies"       │
+   │  └─ Clicks "Add Course"                                │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ POST /api/courses                                       │
+   │ {                                                       │
+   │   course_code: "WEB101",                               │
+   │   course_name: "Web Development",                      │
+   │   description: "Learn modern web technologies"         │
+   │ }                                                       │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Database Update:                                        │
+   │  INSERT INTO courses (...) VALUES (...)                │
+   │  NEW COURSE ADDED WITH ID: 15                          │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Real-Time Updates:                                      │
+   │  1. Course list refreshes in admin panel               │
+   │  2. Success notification shown                         │
+   │  3. Form clears for next entry                         │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ INSTANT IMPACT - USER HOMEPAGE:                         │
+   │  1. Course dropdown refetches from API                  │
+   │  2. New "Web Development" appears                       │
+   │  3. Students can select it immediately                 │
+   │  NO PAGE REFRESH NEEDED!                               │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+                     ▼
+        [Admin sees course added]
+        [User sees course in dropdown]
+
+2. ADMIN EDITS COURSE
+   ┌─────────────────────────────────────────────────────────┐
+   │ Admin finds course in list                              │
+   │ Clicks "Edit" button                                    │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Form populates with current data:                       │
+   │  ├─ Course Code: "WEB101"                              │
+   │  ├─ Course Name: "Web Development"                     │
+   │  ├─ Description: "Learn modern web technologies"       │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Admin modifies:                                         │
+   │  ├─ Course Name: "Advanced Web Development"            │
+   │  └─ Clicks "Update"                                    │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ PUT /api/courses/15                                     │
+   │ {                                                       │
+   │   course_code: "WEB101",                               │
+   │   course_name: "Advanced Web Development",             │
+   │   description: "Learn modern web technologies"         │
+   │ }                                                       │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Database Update:                                        │
+   │  UPDATE courses SET course_name = "Advanced..."        │
+   │  WHERE id = 15                                         │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ INSTANT IMPACT:                                         │
+   │  1. Course list updates in admin panel                 │
+   │  2. Homepage dropdown shows new name                   │
+   │  3. User sees "Advanced Web Development"               │
+   │  NO PAGE REFRESH NEEDED!                               │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+                     ▼
+        [Changes reflected everywhere instantly]
+
+3. ADMIN DELETES COURSE
+   ┌─────────────────────────────────────────────────────────┐
+   │ Admin finds course in list                              │
+   │ Clicks "Delete" button                                  │
+   │ Confirms deletion                                       │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ DELETE /api/courses/15                                  │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ Database Delete:                                        │
+   │  DELETE FROM courses WHERE id = 15                     │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+   ┌─────────────────▼───────────────────────────────────────┐
+   │ INSTANT IMPACT:                                         │
+   │  1. Course removed from admin list                     │
+   │  2. Homepage dropdown refreshes                        │
+   │  3. Course no longer available for selection           │
+   │  4. Students see updated course list                   │
+   │  NO PAGE REFRESH NEEDED!                               │
+   └─────────────────┬───────────────────────────────────────┘
+                     │
+                     ▼
+        [Course removed from system]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+API ENDPOINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COURSE ENDPOINTS
+─────────────────────────────────────────────────────────────────────────
+
+GET /api/courses
+  ├─ Purpose: Fetch all courses
+  ├─ Called by: Homepage (for dropdown), Admin Dashboard
+  ├─ Response: Array of course objects
+  └─ Example:
+     [
+       {
+         id: 1,
+         course_code: "WEB101",
+         course_name: "Web Development",
+         description: "Learn HTML, CSS, JavaScript"
+       },
+       {...}
+     ]
+
+POST /api/courses
+  ├─ Purpose: Create new course
+  ├─ Called by: Admin Course Management
+  ├─ Request body: {course_code, course_name, description}
+  └─ Response: Created course with ID
+
+PUT /api/courses/:id
+  ├─ Purpose: Update existing course
+  ├─ Called by: Admin Course Management
+  ├─ Request body: {course_code, course_name, description}
+  └─ Response: Updated course
+
+DELETE /api/courses/:id
+  ├─ Purpose: Delete course
+  ├─ Called by: Admin Course Management
+  └─ Response: Success confirmation
+
+REGISTRATION ENDPOINTS
+─────────────────────────────────────────────────────────────────────────
+
+GET /api/registrations
+  ├─ Purpose: Fetch all student registrations
+  ├─ Called by: Admin Registrations View
+  ├─ Response: Array of registration objects
+  └─ Example:
+     [
+       {
+         id: 1,
+         first_name: "John",
+         last_name: "Doe",
+         email: "john@example.com",
+         phone: "+1234567890",
+         date_of_birth: "1990-01-15",
+         gender: "male",
+         address: "123 Main St",
+         city: "Addis Ababa",
+         courses: [1, 2]
+       },
+       {...}
+     ]
+
+POST /api/registrations
+  ├─ Purpose: Submit new student registration
+  ├─ Called by: Homepage Registration Form
+  ├─ Request body: {all student fields + course_id}
+  └─ Response: Created registration with ID
+
+PUT /api/registrations/:id
+  ├─ Purpose: Update student registration
+  ├─ Called by: Admin Registrations View
+  ├─ Request body: {updated fields}
+  └─ Response: Updated registration
+
+DELETE /api/registrations/:id
+  ├─ Purpose: Delete student registration
+  ├─ Called by: Admin Registrations View
+  └─ Response: Success confirmation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATABASE SCHEMA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COURSES TABLE
+─────────────────────────────────────────────────────────────────────────
+
+courses
+├─ id (PRIMARY KEY, AUTO INCREMENT)
+├─ course_code (STRING, UNIQUE)
+├─ course_name (STRING)
+├─ description (TEXT, NULLABLE)
+├─ created_at (TIMESTAMP, DEFAULT NOW)
+└─ updated_at (TIMESTAMP, DEFAULT NOW)
+
+STUDENTS TABLE
+─────────────────────────────────────────────────────────────────────────
+
+students
+├─ id (PRIMARY KEY, AUTO INCREMENT)
+├─ first_name (STRING)
+├─ last_name (STRING)
+├─ email (STRING, UNIQUE)
+├─ phone (STRING)
+├─ date_of_birth (DATE)
+├─ gender (STRING)
+├─ address (STRING)
+├─ city (STRING)
+├─ courses (ARRAY OF INTEGERS) → References courses.id
+├─ created_at (TIMESTAMP, DEFAULT NOW)
+└─ updated_at (TIMESTAMP, DEFAULT NOW)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STATE MANAGEMENT & CACHING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CLIENT-SIDE STATE
+─────────────────────────────────────────────────────────────────────────
+
+RegistrationFormSimple Component:
+├─ formData: Personal information + course selection
+├─ courses: List of available courses
+├─ coursesLoading: Loading state for course fetch
+├─ formLoading: Loading state during submission
+├─ Methods: handleInputChange, handleSubmit, validateForm
+
+Admin Components:
+├─ courses: List of courses in management view
+├─ registrations: List of student registrations
+├─ formData: Currently editing form data
+├─ editingId: ID of course/registration being edited
+├─ Methods: fetchCourses, handleAdd, handleEdit, handleDelete
+
+DATA FETCHING PATTERN
+─────────────────────────────────────────────────────────────────────────
+
+1. Component Mounts
+   └─ useEffect hook triggers
+      └─ fetchCourses() called
+         └─ GET /api/courses
+            └─ Response cached in component state
+               └─ Re-renders with courses
+
+2. User Submits Form
+   └─ handleSubmit() called
+      └─ Validation check
+         └─ POST to API
+            └─ Response received
+               └─ State updates
+                  └─ Component re-renders
+                     └─ Success message shown
+
+3. Admin Modifies Course
+   └─ handleEdit() called
+      └─ PUT /api/courses/:id
+         └─ Response received
+            └─ Local state updates
+               └─ Courses list refreshes
+                  └─ Homepage automatically sees change
+                     (via new API call from homepage)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+RESPONSIVE BREAKPOINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+MOBILE LAYOUT (< 640px)
+─────────────────────────────────────────────────────────────────────────
+
+Homepage:
+│
+├─ Header
+│  ├─ Logo (DM badge)
+│  ├─ Dream More title
+│  └─ Admin Panel link (hidden)
+│
+├─ Hero Section
+│  ├─ Title: "Start Your Learning Journey"
+│  └─ Subheading (full width)
+│
+├─ Registration Form
+│  ├─ Single column layout
+│  ├─ Full-width input fields
+│  ├─ Course dropdown (full width)
+│  ├─ Submit button (full width, 48px height)
+│  └─ Form fields stack vertically
+│
+├─ Features Section
+│  ├─ Three items stacked vertically
+│  └─ Numbers (1, 2, 3) above each
+│
+└─ Footer
+   ├─ Contact info centered
+   └─ Copyright text
+
+Admin Panel:
+│
+├─ Header
+│  ├─ Menu toggle button
+│  └─ "Admin Panel" text
+│
+├─ Sidebar
+│  ├─ Hidden by default
+│  ├─ Menu toggle shows/hides
+│  ├─ Full-width overlay
+│  └─ Touch-friendly navigation
+│
+└─ Content Area
+   ├─ Full width
+   ├─ Cards stack vertically
+   └─ Tables scroll horizontally
+
+TABLET LAYOUT (640px - 1024px)
+─────────────────────────────────────────────────────────────────────────
+
+Homepage:
+│
+├─ Header (unchanged)
+│
+├─ Hero Section
+│  ├─ Larger text
+│  └─ Better spacing
+│
+├─ Registration Form
+│  ├─ Grid: 2 columns
+│  ├─ Input fields in pairs
+│  ├─ Full-width selects
+│  └─ Better vertical rhythm
+│
+├─ Features Section
+│  ├─ Grid: 2-3 columns
+│  └─ Better visual balance
+│
+└─ Footer
+
+Admin Panel:
+│
+├─ Sidebar
+│  ├─ Visible always
+│  ├─ Narrower width
+│  └─ Collapsible on demand
+│
+└─ Content Area
+   ├─ Flexible width
+   ├─ 2-column grids
+   └─ Better table layout
+
+DESKTOP LAYOUT (> 1024px)
+─────────────────────────────────────────────────────────────────────────
+
+Homepage:
+│
+├─ Header (sticky, professional)
+│
+├─ Container (max-width: 896px, centered)
+│  │
+│  ├─ Hero Section
+│  │  ├─ Large typography
+│  │  ├─ Optimal line length
+│  │  └─ Generous spacing
+│  │
+│  ├─ Registration Form
+│  │  ├─ Clean, centered layout
+│  │  ├─ Professional shadows
+│  │  ├─ Hover effects active
+│  │  └─ Loading states animated
+│  │
+│  ├─ Features Section
+│  │  ├─ 3-column grid
+│  │  ├─ Even spacing
+│  │  └─ Hover lift effects
+│  │
+│  └─ Footer
+│
+└─ Professional Polish
+   ├─ Smooth transitions
+   ├─ Shadow effects
+   └─ Optimized colors
+
+Admin Panel:
+│
+├─ Fixed Sidebar
+│  ├─ Full height
+│  ├─ Always visible
+│  ├─ Width: 256px
+│  └─ Navigation: 4 items
+│
+├─ Main Content
+│  ├─ Flexible width
+│  ├─ Max-width container
+│  ├─ Generous padding
+│  └─ Optimized for reading
+│
+├─ Dashboard Cards
+│  ├─ Grid: 4 columns
+│  ├─ Equal heights
+│  └─ Professional layout
+│
+├─ Tables
+│  ├─ Full width
+│  ├─ Sortable columns
+│  ├─ Hover effects
+│  └─ Professional styling
+│
+└─ Modals & Forms
+   ├─ Centered overlays
+   ├─ Shadow effects
+   └─ Professional appearance
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+END OF ARCHITECTURE DIAGRAM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
