@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,9 +37,18 @@ interface FormData {
   courses: string[]
 }
 
+interface Course {
+  id: number
+  course_code: string
+  course_name: string
+  description: string | null
+}
+
 export function StudentRegistrationForm() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [courses, setCourses] = useState<Course[]>([])
+  const [coursesLoading, setCoursesLoading] = useState(true)
   const [formData, setFormData] = useState<FormData>({
     first_name: '',
     last_name: '',
@@ -52,6 +61,29 @@ export function StudentRegistrationForm() {
     courses: [],
   })
 
+  // Fetch courses from database
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch('/api/courses')
+        if (!response.ok) throw new Error('Failed to fetch courses')
+        const data = await response.json()
+        setCourses(data)
+      } catch (error) {
+        console.error('Error fetching courses:', error)
+        toast({
+          title: 'Error',
+          description: 'Failed to load courses. Please refresh the page.',
+          variant: 'destructive',
+        })
+      } finally {
+        setCoursesLoading(false)
+      }
+    }
+
+    fetchCourses()
+  }, [toast])
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -60,13 +92,16 @@ export function StudentRegistrationForm() {
     }))
   }
 
-  const handleCourseToggle = (course: string) => {
-    setFormData(prev => ({
-      ...prev,
-      courses: prev.courses.includes(course)
-        ? prev.courses.filter(c => c !== course)
-        : [...prev.courses, course],
-    }))
+  const handleCourseToggle = (courseId: number) => {
+    setFormData(prev => {
+      const courseIdStr = courseId.toString()
+      return {
+        ...prev,
+        courses: prev.courses.includes(courseIdStr)
+          ? prev.courses.filter(c => c !== courseIdStr)
+          : [...prev.courses, courseIdStr],
+      }
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -234,24 +269,40 @@ export function StudentRegistrationForm() {
           <CardDescription>Choose the courses you want to enroll in</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {AVAILABLE_COURSES.map(course => (
-              <div key={course} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
-                <Checkbox
-                  id={course}
-                  checked={formData.courses.includes(course)}
-                  onCheckedChange={() => handleCourseToggle(course)}
-                  className="cursor-pointer"
-                />
-                <label
-                  htmlFor={course}
-                  className="text-sm font-medium cursor-pointer text-foreground hover:text-accent transition-colors"
-                >
-                  {course}
-                </label>
-              </div>
-            ))}
-          </div>
+          {coursesLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-3 border-muted border-t-accent rounded-full animate-spin"></div>
+              <p className="ml-3 text-foreground/70">Loading courses...</p>
+            </div>
+          ) : courses.length === 0 ? (
+            <p className="text-center text-foreground/70 py-8">No courses available yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {courses.map(course => (
+                <div key={course.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
+                  <Checkbox
+                    id={`course-${course.id}`}
+                    checked={formData.courses.includes(course.id.toString())}
+                    onCheckedChange={() => handleCourseToggle(course.id)}
+                    className="cursor-pointer mt-1"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <label
+                      htmlFor={`course-${course.id}`}
+                      className="text-sm font-medium cursor-pointer text-foreground hover:text-accent transition-colors"
+                    >
+                      {course.course_name}
+                    </label>
+                    {course.description && (
+                      <p className="text-xs text-foreground/60 mt-1 line-clamp-2">
+                        {course.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -1,6 +1,5 @@
-import Link from 'next/link'
+import { AdminNav } from '@/components/admin-nav'
 import { ExportManager } from '@/components/export-manager'
-import { Button } from '@/components/ui/button'
 
 export const metadata = {
   title: 'Export Data | Dream More Admin',
@@ -10,32 +9,7 @@ export const metadata = {
 export default function ExportPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
-      {/* Header */}
-      <header className="bg-primary text-white sticky top-0 z-50 material-shadow-2">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center font-bold text-primary">
-              DM
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Dream More</h1>
-              <p className="text-accent text-sm">Export Data</p>
-            </div>
-          </div>
-          <nav className="flex gap-4">
-            <Link href="/admin">
-              <Button variant="outline" className="bg-white/10 hover:bg-white/20 border-white/30 text-white">
-                Dashboard
-              </Button>
-            </Link>
-            <Link href="/admin/settings">
-              <Button variant="outline" className="bg-white/10 hover:bg-white/20 border-white/30 text-white">
-                Settings
-              </Button>
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <AdminNav />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
