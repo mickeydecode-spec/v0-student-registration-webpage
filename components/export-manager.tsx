@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
@@ -21,7 +21,7 @@ export function ExportManager() {
   const supabase = createClient()
 
   // Load admin email
-  React.useEffect(() => {
+  useEffect(() => {
     const loadAdminEmail = async () => {
       try {
         const { data } = await supabase
