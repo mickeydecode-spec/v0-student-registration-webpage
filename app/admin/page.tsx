@@ -1,3 +1,4 @@
+import { AdminProtected } from '@/components/admin-protected'
 import { AdminLayout } from '@/components/admin-layout'
 import { AdminDashboardOverview } from '@/components/admin-dashboard-overview'
 
@@ -8,8 +9,10 @@ export const metadata = {
 
 export default function AdminPage() {
   return (
-    <AdminLayout>
-      <AdminDashboardOverview />
-    </AdminLayout>
+    <AdminProtected>
+      <AdminLayout>
+        <AdminDashboardOverview />
+      </AdminLayout>
+    </AdminProtected>
   )
 }

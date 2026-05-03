@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
-import { Trash2Icon, EditIcon, PlusIcon, SaveIcon, XIcon, AlertCircle, CheckCircle } from 'lucide-react'
+import { Trash2Icon, EditIcon, PlusIcon, SaveIcon, XIcon, AlertCircle, CheckCircle, Upload } from 'lucide-react'
 
 interface CourseFormData {
   course_code: string
@@ -14,11 +14,18 @@ interface CourseFormData {
   description: string
 }
 
+interface BulkCourseData {
+  name: string
+  code?: string
+}
+
 export function CourseManagement() {
   const { courses, isLoading, mutate } = useCourses()
   const { toast } = useToast()
   const [editingId, setEditingId] = useState<number | null>(null)
   const [isAdding, setIsAdding] = useState(false)
+  const [isBulkAdding, setIsBulkAdding] = useState(false)
+  const [bulkInput, setBulkInput] = useState('')
   const [formData, setFormData] = useState<CourseFormData>({
     course_code: '',
     course_name: '',
@@ -152,6 +159,79 @@ export function CourseManagement() {
     }
   }
 
+  // Bulk course addition handlers
+  const parseBulkInput = (input: string): BulkCourseData[] => {
+    const lines = input.split('\n').filter((line) => line.trim())
+    return lines.map((line) => {
+      const trimmed = line.trim()
+      // Simple format: "Course Name" or "CODE: Course Name"
+      if (trimmed.includes(':')) {
+        const [code, name] = trimmed.split(':').map((s) => s.trim())
+        return { name, code }
+      }
+      return { name: trimmed }
+    })
+  }
+
+  const handleBulkAdd = async () => {
+    const courseList = parseBulkInput(bulkInput)
+
+    if (courseList.length === 0) {
+      toast({
+        title: 'Error',
+        description: 'Please enter at least one course name',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsSaving(true)
+    let successCount = 0
+    let failCount = 0
+
+    try {
+      for (const course of courseList) {
+        try {
+          const courseCode = course.code || `COURSE${Math.floor(Math.random() * 10000)}`
+          await createCourse({
+            course_code: courseCode,
+            course_name: course.name,
+            description: '',
+          })
+          successCount++
+        } catch {
+          failCount++
+        }
+      }
+
+      await mutate()
+
+      if (failCount === 0) {
+        toast({
+          title: 'Success',
+          description: `${successCount} course${successCount !== 1 ? 's' : ''} added successfully`,
+        })
+      } else {
+        toast({
+          title: 'Partial Success',
+          description: `${successCount} added, ${failCount} failed`,
+          variant: 'destructive',
+        })
+      }
+
+      setBulkInput('')
+      setIsBulkAdding(false)
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to add courses',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background py-8 px-4 md:px-8">
       <div className="max-w-6xl mx-auto">
@@ -264,13 +344,96 @@ export function CourseManagement() {
                   </div>
                 </form>
               ) : (
-                <Button
-                  onClick={handleAddCourse}
-                  className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 text-base"
-                >
-                  <PlusIcon className="w-5 h-5 mr-2" />
-                  Add New Course
-                </Button>
+                <div className="space-y-4">
+                  {/* Single or Bulk Toggle */}
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        setIsAdding(true)
+                        setIsBulkAdding(false)
+                        setEditingId(null)
+                        setFormData({
+                          course_code: '',
+                          course_name: '',
+                          description: '',
+                        })
+                        setErrors({})
+                      }}
+                      disabled={isBulkAdding || editingId !== null}
+                      className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-6 text-base"
+                    >
+                      <PlusIcon className="w-5 h-5 mr-2" />
+                      Add Single Course
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsBulkAdding(true)
+                        setIsAdding(false)
+                        setEditingId(null)
+                        setBulkInput('')
+                        setErrors({})
+                      }}
+                      disabled={isAdding || editingId !== null}
+                      variant="outline"
+                      className="flex-1 font-semibold py-6 text-base"
+                    >
+                      <Upload className="w-5 h-5 mr-2" />
+                      Bulk Add Courses
+                    </Button>
+                  </div>
+
+                  {/* Bulk Input Section */}
+                  {isBulkAdding && (
+                    <div className="space-y-4 p-6 bg-muted/30 rounded-lg border-2 border-accent/30">
+                      <div>
+                        <label className="text-sm font-semibold text-foreground mb-2 block">
+                          Course Names (One per line) *
+                        </label>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Enter one course name per line. Optionally prefix with code using "CODE: Course Name" format.
+                        </p>
+                        <Textarea
+                          value={bulkInput}
+                          onChange={(e) => setBulkInput(e.target.value)}
+                          placeholder={`Web Development
+Graphics Design
+Digital Marketing
+CODE101: Advanced Python
+CODE102: Mobile App Dev`}
+                          disabled={isSaving}
+                          rows={8}
+                          className="neomorph-light-sm resize-none font-mono text-sm"
+                        />
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {bulkInput.split('\n').filter((line) => line.trim()).length} course{bulkInput.split('\n').filter((line) => line.trim()).length !== 1 ? 's' : ''} to add
+                        </p>
+                      </div>
+
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={handleBulkAdd}
+                          disabled={isSaving || !bulkInput.trim()}
+                          className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          {isSaving ? 'Adding...' : 'Add All Courses'}
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setIsBulkAdding(false)
+                            setBulkInput('')
+                          }}
+                          disabled={isSaving}
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          <XIcon className="w-4 h-4 mr-2" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

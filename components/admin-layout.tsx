@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Menu, X, BarChart3, Users, BookOpen, Settings } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
+import { Menu, X, BarChart3, Users, BookOpen, Settings, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAdminAuth } from '@/hooks/use-admin-auth'
 
 interface AdminLayoutProps {
   children: React.ReactNode
@@ -13,6 +14,8 @@ interface AdminLayoutProps {
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+  const { logout } = useAdminAuth()
 
   const navItems = [
     { icon: BarChart3, label: 'Dashboard', href: '/admin' },
@@ -24,6 +27,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const isActive = (href: string) => {
     if (href === '/admin') return pathname === '/admin'
     return pathname.startsWith(href)
+  }
+
+  const handleLogout = () => {
+    logout()
+    router.push('/admin/login')
   }
 
   return (
@@ -70,15 +78,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           })}
         </nav>
 
-        <div className="border-t border-primary/20 p-4">
+        <div className="border-t border-primary/20 p-4 space-y-2">
           <Link href="/" className="block w-full">
             <Button
               variant="outline"
-              className="w-full bg-white/10 hover:bg-white/20 border-white/30 text-white"
+              className="w-full bg-white/10 hover:bg-white/20 border-white/30 text-white text-sm"
             >
               Back to Home
             </Button>
           </Link>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="w-full bg-red-500/20 hover:bg-red-500/30 border-red-400/30 text-white text-sm"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
         </div>
       </div>
 

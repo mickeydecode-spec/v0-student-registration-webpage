@@ -20,11 +20,13 @@ export default function Page() {
               <p className="text-accent text-xs">Right work at right time</p>
             </div>
           </div>
+          {/* Hidden admin link - accessible only to those who know */}
           <a
-            href="/admin"
-            className="hidden sm:inline-block px-4 py-2 text-sm font-medium text-primary hover:text-accent transition-colors"
+            href="/admin/login"
+            className="hidden sm:inline-block px-4 py-2 text-xs font-medium text-muted-foreground hover:text-accent transition-colors opacity-20 hover:opacity-100"
+            title="Admin access"
           >
-            Admin Panel
+            ⚙️
           </a>
         </div>
       </header>

@@ -1,3 +1,4 @@
+import { AdminProtected } from '@/components/admin-protected'
 import { AdminNav } from '@/components/admin-nav'
 import { CourseManagement } from '@/components/course-management'
 
@@ -8,9 +9,11 @@ export const metadata = {
 
 export default function CoursesPage() {
   return (
-    <div>
-      <AdminNav />
-      <CourseManagement />
-    </div>
+    <AdminProtected>
+      <div>
+        <AdminNav />
+        <CourseManagement />
+      </div>
+    </AdminProtected>
   )
 }
