@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast'
 import { useRegistrations } from '@/hooks/use-registrations'
 import { createClient } from '@/lib/supabase/client'
 import { Checkbox } from '@/components/ui/checkbox'
-import { DownloadIcon, EnvelopeIcon } from '@radix-ui/react-icons'
+import { DownloadIcon, EnvelopeOpenIcon } from '@radix-ui/react-icons'
 
 export function ExportManager() {
   const { toast } = useToast()
@@ -236,7 +236,7 @@ export function ExportManager() {
               disabled={registrations.length === 0 || emailLoading}
               className="flex items-center gap-2 bg-accent hover:bg-accent/90 text-primary font-semibold interactive-shadow"
             >
-              <EnvelopeIcon className="w-4 h-4" />
+              <EnvelopeOpenIcon className="w-4 h-4" />
               {emailLoading ? 'Sending...' : 'Email to Admin'}
             </Button>
           </div>
