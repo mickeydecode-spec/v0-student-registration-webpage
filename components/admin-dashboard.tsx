@@ -176,7 +176,6 @@ export function AdminDashboard() {
               </thead>
               <tbody>
                 {filteredRegistrations.map((reg) => (
-                  <div key={reg.id}>
                     <tr className="border-b border-border hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3 font-medium text-foreground">
                         {editingCell.id === reg.id && editingCell.field === 'full_name' ? (
@@ -301,7 +300,6 @@ export function AdminDashboard() {
                         </td>
                       </tr>
                     )}
-                  </div>
                 ))}
               </tbody>
             </table>
