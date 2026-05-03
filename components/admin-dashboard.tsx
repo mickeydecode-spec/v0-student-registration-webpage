@@ -175,8 +175,8 @@ export function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRegistrations.map((reg) => (
-                    <tr className="border-b border-border hover:bg-muted/30 transition-colors">
+                {filteredRegistrations.map((reg) => [
+                  <tr key={reg.id} className="border-b border-border hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3 font-medium text-foreground">
                         {editingCell.id === reg.id && editingCell.field === 'full_name' ? (
                           <Input
@@ -258,9 +258,9 @@ export function AdminDashboard() {
                           </Button>
                         </div>
                       </td>
-                    </tr>
-                    {expandedRow === reg.id && (
-                      <tr className="bg-muted/30 border-b border-border">
+                    </tr>,
+                    expandedRow === reg.id && (
+                      <tr key={`${reg.id}-expanded`} className="bg-muted/30 border-b border-border">
                         <td colSpan={4} className="px-4 py-4">
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                             <div>
@@ -299,8 +299,8 @@ export function AdminDashboard() {
                           </div>
                         </td>
                       </tr>
-                    )}
-                ))}
+                    ),
+                ])}
               </tbody>
             </table>
           )}
