@@ -1,20 +1,15 @@
 import useSWR from 'swr'
-import { createClient } from '@/lib/supabase/client'
 
-const supabase = createClient()
-
-const fetcher = async () => {
-  const { data, error } = await supabase
-    .from('students')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  if (error) throw error
-  return data
+const fetcher = async (url: string) => {
+  const res = await fetch(url)
+  if (!res.ok) {
+    throw new Error('Failed to fetch registrations')
+  }
+  return res.json()
 }
 
 export function useRegistrations() {
-  const { data, error, isLoading, mutate } = useSWR('registrations', fetcher, {
+  const { data, error, isLoading, mutate } = useSWR('/api/registrations', fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 60000,
   })

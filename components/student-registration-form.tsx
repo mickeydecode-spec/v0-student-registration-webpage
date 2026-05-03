@@ -34,8 +34,6 @@ interface FormData {
   gender: string
   address: string
   city: string
-  state: string
-  postal_code: string
   courses: string[]
 }
 
@@ -51,8 +49,6 @@ export function StudentRegistrationForm() {
     gender: '',
     address: '',
     city: '',
-    state: '',
-    postal_code: '',
     courses: [],
   })
 
@@ -89,8 +85,6 @@ export function StudentRegistrationForm() {
           gender: formData.gender,
           address: formData.address,
           city: formData.city,
-          state: formData.state,
-          postal_code: formData.postal_code,
           courses: formData.courses,
         },
       ])
@@ -111,8 +105,6 @@ export function StudentRegistrationForm() {
         gender: '',
         address: '',
         city: '',
-        state: '',
-        postal_code: '',
         courses: [],
       })
     } catch (error) {
@@ -207,7 +199,6 @@ export function StudentRegistrationForm() {
                 <option value="">Select Gender</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
-                <option value="other">Other</option>
               </select>
             </div>
           </div>
@@ -223,37 +214,15 @@ export function StudentRegistrationForm() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">City</label>
-              <Input
-                name="city"
-                value={formData.city}
-                onChange={handleInputChange}
-                placeholder="City"
-                className="neomorph-light-sm focus:ring-accent"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">State/Region</label>
-              <Input
-                name="state"
-                value={formData.state}
-                onChange={handleInputChange}
-                placeholder="State"
-                className="neomorph-light-sm focus:ring-accent"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Postal Code</label>
-              <Input
-                name="postal_code"
-                value={formData.postal_code}
-                onChange={handleInputChange}
-                placeholder="Postal Code"
-                className="neomorph-light-sm focus:ring-accent"
-              />
-            </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">City</label>
+            <Input
+              name="city"
+              value={formData.city}
+              onChange={handleInputChange}
+              placeholder="City"
+              className="neomorph-light-sm focus:ring-accent"
+            />
           </div>
         </CardContent>
       </Card>

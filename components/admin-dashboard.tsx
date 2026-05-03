@@ -280,14 +280,6 @@ export function AdminDashboard() {
                               <span className="font-semibold text-foreground">City: </span>
                               <span className="text-foreground/80">{reg.city || 'N/A'}</span>
                             </div>
-                            <div>
-                              <span className="font-semibold text-foreground">State: </span>
-                              <span className="text-foreground/80">{reg.state || 'N/A'}</span>
-                            </div>
-                            <div>
-                              <span className="font-semibold text-foreground">Postal Code: </span>
-                              <span className="text-foreground/80">{reg.postal_code || 'N/A'}</span>
-                            </div>
                             <div className="md:col-span-2">
                               <span className="font-semibold text-foreground">Address: </span>
                               <span className="text-foreground/80">{reg.address || 'N/A'}</span>
