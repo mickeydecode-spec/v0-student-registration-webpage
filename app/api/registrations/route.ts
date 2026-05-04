@@ -16,12 +16,12 @@ export async function GET() {
     // Fetch all courses
     const { data: courses, error: coursesError } = await supabase
       .from('courses')
-      .select('id, name')
+      .select('id, course_name')
 
     if (coursesError) throw coursesError
 
     // Create a map of course ID to course name
-    const courseMap = new Map(courses?.map((c: any) => [c.id.toString(), c.name]) || [])
+    const courseMap = new Map(courses?.map((c: any) => [c.id.toString(), c.course_name]) || [])
 
     // Map course IDs to course names
     const enrichedStudents = students?.map((student: any) => ({
