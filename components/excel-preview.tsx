@@ -27,7 +27,7 @@ export function ExcelPreview() {
       'City': reg.city || '',
       'State': reg.state || '',
       'Postal Code': reg.postal_code || '',
-      'Enrolled Courses': (reg.courses || []).join('; '),
+      'Enrolled Courses': (reg.course_names || []).join('; '),
       'Registration Date': new Date(reg.created_at).toLocaleDateString(),
       _id: reg.id,
     }))

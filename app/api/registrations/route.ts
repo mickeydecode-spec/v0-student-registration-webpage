@@ -4,14 +4,32 @@ import { NextResponse } from 'next/server'
 export async function GET() {
   try {
     const supabase = await createClient()
-    const { data, error } = await supabase
+    
+    // Fetch students
+    const { data: students, error: studentsError } = await supabase
       .from('students')
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (studentsError) throw studentsError
 
-    return NextResponse.json(data || [])
+    // Fetch all courses
+    const { data: courses, error: coursesError } = await supabase
+      .from('courses')
+      .select('id, name')
+
+    if (coursesError) throw coursesError
+
+    // Create a map of course ID to course name
+    const courseMap = new Map(courses?.map((c: any) => [c.id.toString(), c.name]) || [])
+
+    // Map course IDs to course names
+    const enrichedStudents = students?.map((student: any) => ({
+      ...student,
+      course_names: (student.courses || []).map((courseId: number) => courseMap.get(courseId.toString()) || `Course ${courseId}`),
+    })) || []
+
+    return NextResponse.json(enrichedStudents)
   } catch (error) {
     console.error('Error fetching registrations:', error)
     return NextResponse.json([], { status: 200 })

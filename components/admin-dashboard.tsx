@@ -30,7 +30,7 @@ export function AdminDashboard() {
       const matchesSearch = 
         `${reg.first_name} ${reg.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         reg.email.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesCourse = !filterCourse || reg.courses?.includes(filterCourse)
+      const matchesCourse = !filterCourse || reg.course_names?.includes(filterCourse)
       return matchesSearch && matchesCourse
     })
   }, [registrations, searchTerm, filterCourse])
@@ -38,7 +38,7 @@ export function AdminDashboard() {
   const allCourses = useMemo(() => {
     const courses = new Set<string>()
     registrations.forEach(reg => {
-      reg.courses?.forEach((course: string) => courses.add(course))
+      reg.course_names?.forEach((course: string) => courses.add(course))
     })
     return Array.from(courses).sort()
   }, [registrations])
@@ -224,7 +224,7 @@ export function AdminDashboard() {
                       <td className="px-4 py-3 text-foreground">
                         <div className="flex items-center gap-2">
                           <span className="truncate">
-                            {reg.courses?.length || 0} course{reg.courses?.length !== 1 ? 's' : ''}
+                            {reg.course_names?.length || 0} course{reg.course_names?.length !== 1 ? 's' : ''}
                           </span>
                           <button
                             onClick={() => setExpandedRow(expandedRow === reg.id ? null : reg.id)}
@@ -286,7 +286,7 @@ export function AdminDashboard() {
                             <div>
                               <span className="font-semibold text-foreground">Enrolled Courses: </span>
                               <div className="mt-2">
-                                {reg.courses?.map((course: string) => (
+                                {reg.course_names?.map((course: string) => (
                                   <span
                                     key={course}
                                     className="inline-block bg-accent/20 text-accent px-2 py-1 rounded text-xs mr-2 mb-2"
