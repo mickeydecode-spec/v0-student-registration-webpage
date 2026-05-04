@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
-import { RefreshCw } from 'lucide-react'
 
 const AVAILABLE_COURSES = [
   'Graphics Designing',
@@ -31,7 +30,6 @@ interface FormData {
   last_name: string
   email: string
   phone: string
-  phone_country_code: string
   date_of_birth: string
   gender: string
   address: string
@@ -56,7 +54,6 @@ export function StudentRegistrationForm() {
     last_name: '',
     email: '',
     phone: '',
-    phone_country_code: '+251',
     date_of_birth: '',
     gender: '',
     address: '',
@@ -87,42 +84,11 @@ export function StudentRegistrationForm() {
     fetchCourses()
   }, [toast])
 
-  const handleRefreshCourses = async () => {
-    try {
-      setCoursesLoading(true)
-      const response = await fetch('/api/courses')
-      if (!response.ok) throw new Error('Failed to fetch courses')
-      const data = await response.json()
-      setCourses(data)
-      toast({
-        title: 'Success',
-        description: 'Courses refreshed successfully',
-      })
-    } catch (error) {
-      console.error('Error fetching courses:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to refresh courses. Please try again.',
-        variant: 'destructive',
-      })
-    } finally {
-      setCoursesLoading(false)
-    }
-  }
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value,
-    }))
-  }
-
-  const handlePhoneCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value
-    setFormData(prev => ({
-      ...prev,
-      phone_country_code: value,
     }))
   }
 
@@ -170,7 +136,6 @@ export function StudentRegistrationForm() {
         last_name: '',
         email: '',
         phone: '',
-        phone_country_code: '+251',
         date_of_birth: '',
         gender: '',
         address: '',
@@ -237,29 +202,16 @@ export function StudentRegistrationForm() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Phone</label>
-              <div className="flex gap-2">
-                <select
-                  value={formData.phone_country_code}
-                  onChange={handlePhoneCountryChange}
-                  className="w-24 px-3 py-2 bg-background border border-border rounded-lg neomorph-light-sm focus:ring-accent focus:ring-2 focus:outline-none text-foreground font-mono text-sm"
-                >
-                  <option value="+251">Ethiopia (+251)</option>
-                  <option value="+1">USA/Canada (+1)</option>
-                  <option value="+44">UK (+44)</option>
-                  <option value="+91">India (+91)</option>
-                  <option value="+86">China (+86)</option>
-                  <option value="+81">Japan (+81)</option>
-                  <option value="+234">Nigeria (+234)</option>
-                  <option value="+27">South Africa (+27)</option>
-                  <option value="+255">Tanzania (+255)</option>
-                  <option value="+256">Uganda (+256)</option>
-                </select>
+              <div className="flex items-center">
+                <span className="px-3 py-2 bg-muted text-muted-foreground font-mono text-sm rounded-l-lg border border-r-0 border-border">
+                  +251
+                </span>
                 <Input
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
                   placeholder="912345678"
-                  className="neomorph-light-sm focus:ring-accent flex-1"
+                  className="neomorph-light-sm focus:ring-accent flex-1 rounded-l-none"
                 />
               </div>
             </div>
@@ -318,23 +270,8 @@ export function StudentRegistrationForm() {
       {/* Course Selection Section */}
       <Card className="mb-6 interactive-shadow border-border/50">
         <CardHeader className="bg-gradient-to-r from-accent/5 to-primary/5">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-primary">Select Courses</CardTitle>
-              <CardDescription>Choose the courses you want to enroll in</CardDescription>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleRefreshCourses}
-              disabled={coursesLoading || loading}
-              className="h-8 w-8 p-0"
-              title="Refresh courses"
-            >
-              <RefreshCw className={`w-4 h-4 text-accent ${coursesLoading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
+          <CardTitle className="text-primary">Select Courses</CardTitle>
+          <CardDescription>Choose the courses you want to enroll in</CardDescription>
         </CardHeader>
         <CardContent className="pt-6">
           {coursesLoading ? (
@@ -345,30 +282,47 @@ export function StudentRegistrationForm() {
           ) : courses.length === 0 ? (
             <p className="text-center text-foreground/70 py-8">No courses available yet.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {courses.map(course => (
-                <div key={course.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
-                  <Checkbox
-                    id={`course-${course.id}`}
-                    checked={formData.courses.includes(course.id.toString())}
-                    onCheckedChange={() => handleCourseToggle(course.id)}
-                    className="cursor-pointer mt-1"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <label
-                      htmlFor={`course-${course.id}`}
-                      className="text-sm font-medium cursor-pointer text-foreground hover:text-accent transition-colors"
-                    >
-                      {course.course_name}
-                    </label>
-                    {course.description && (
-                      <p className="text-xs text-foreground/60 mt-1 line-clamp-2">
-                        {course.description}
-                      </p>
-                    )}
+                <div
+                  key={course.id}
+                  onClick={() => handleCourseToggle(course.id)}
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-105 ${
+                    formData.courses.includes(course.id.toString())
+                      ? 'border-accent bg-accent/10'
+                      : 'border-muted hover:border-accent/50 bg-muted/20'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id={`course-${course.id}`}
+                      checked={formData.courses.includes(course.id.toString())}
+                      onCheckedChange={() => handleCourseToggle(course.id)}
+                      className="cursor-pointer mt-1"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <label
+                        htmlFor={`course-${course.id}`}
+                        className="text-sm font-semibold cursor-pointer text-foreground"
+                      >
+                        {course.course_name}
+                      </label>
+                      {course.description && (
+                        <p className="text-xs text-foreground/60 mt-1 line-clamp-2">
+                          {course.description}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+          {formData.courses.length > 0 && (
+            <div className="mt-4 p-3 bg-accent/10 border border-accent/30 rounded-lg">
+              <p className="text-sm font-medium text-foreground">
+                Selected courses: <span className="text-accent font-semibold">{formData.courses.length}</span>
+              </p>
             </div>
           )}
         </CardContent>
