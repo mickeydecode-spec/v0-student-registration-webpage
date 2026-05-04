@@ -18,6 +18,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter()
   const { logout } = useAdminAuth()
 
+  const navItems = [
+    { icon: BarChart3, label: 'Dashboard', href: '/admin' },
+    { icon: Users, label: 'Registrations', href: '/admin/registrations' },
+    { icon: BookOpen, label: 'Manage Courses', href: '/admin/manage-courses' },
+    { icon: Download, label: 'Export Data', href: '/admin/export' },
+    { icon: Settings, label: 'Settings', href: '/admin/settings' },
+  ]
+
+  const isActive = (href: string) => {
+    return pathname === href
+  }
+
   const handleRefreshData = async () => {
     setIsRefreshing(true)
     try {
