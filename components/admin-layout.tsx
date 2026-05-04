@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { Menu, X, BarChart3, Users, BookOpen, Settings, LogOut } from 'lucide-react'
+import { Menu, X, BarChart3, Users, BookOpen, Settings, LogOut, Download, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAdminAuth } from '@/hooks/use-admin-auth'
 
@@ -13,6 +13,7 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
   const { logout } = useAdminAuth()
@@ -21,12 +22,27 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { icon: BarChart3, label: 'Dashboard', href: '/admin' },
     { icon: Users, label: 'Registrations', href: '/admin/registrations' },
     { icon: BookOpen, label: 'Manage Courses', href: '/admin/manage-courses' },
+    { icon: Download, label: 'Export Data', href: '/admin/export' },
     { icon: Settings, label: 'Settings', href: '/admin/settings' },
   ]
 
   const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin'
-    return pathname.startsWith(href)
+    return pathname === href
+  }
+
+  const handleRefreshData = async () => {
+    setIsRefreshing(true)
+    try {
+      // Refresh courses data
+      await fetch('/api/courses', { method: 'GET' })
+      // You can add more refresh logic here for other data sources
+      // Trigger a page refresh to reload all admin data
+      router.refresh()
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
   const handleLogout = () => {
@@ -109,14 +125,26 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="h-16 bg-white border-b border-border/50 flex items-center px-4 md:px-8 sticky top-0 z-40">
-          <button
-            className="md:hidden text-primary mr-4"
-            onClick={() => setSidebarOpen(true)}
+        <div className="h-16 bg-white border-b border-border/50 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40">
+          <div className="flex items-center gap-4">
+            <button
+              className="md:hidden text-primary"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <h1 className="text-2xl font-bold text-primary">Admin Panel</h1>
+          </div>
+          <Button
+            onClick={handleRefreshData}
+            disabled={isRefreshing}
+            size="sm"
+            variant="outline"
+            className="gap-2"
           >
-            <Menu className="w-6 h-6" />
-          </button>
-          <h1 className="text-2xl font-bold text-primary">Admin Panel</h1>
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          </Button>
         </div>
 
         {/* Content */}

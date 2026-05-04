@@ -1,161 +1,217 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
 import { useAdminAuth } from '@/hooks/use-admin-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { AlertCircle, Lock, Eye, EyeOff } from 'lucide-react'
+import {
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  ShieldCheck,
+  KeyRound,
+  Clock,
+  ChevronRight,
+} from 'lucide-react'
 
+// ─── Security badge strip ─────────────────────────────────────────────────────
+function SecurityBadges() {
+  return (
+    <div className="flex items-center gap-4 justify-center flex-wrap">
+      {[
+        { icon: ShieldCheck, label: 'Rate Limited' },
+        { icon: KeyRound, label: 'Hashed Passwords' },
+        { icon: Lock, label: 'CSRF Protected' },
+        { icon: Clock, label: '12h Sessions' },
+      ].map(({ icon: Icon, label }) => (
+        <div
+          key={label}
+          className="flex items-center gap-1.5 text-xs text-white/40 select-none"
+        >
+          <Icon className="w-3 h-3" />
+          <span>{label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Rate-limit countdown ─────────────────────────────────────────────────────
+function RateLimitBanner({ remainingMs }: { remainingMs: number }) {
+  const [secs, setSecs] = useState(Math.ceil(remainingMs / 1000))
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSecs(s => {
+        if (s <= 1) { clearInterval(interval); return 0 }
+        return s - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const mins = Math.floor(secs / 60)
+  const remaining = secs % 60
+
+  return (
+    <div className="flex items-start gap-3 p-4 rounded-lg border border-red-500/30 bg-red-500/10">
+      <Clock className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+      <p className="text-sm text-red-300">
+        Too many failed attempts. Try again in{' '}
+        <span className="font-mono font-semibold text-red-200">
+          {mins > 0 ? `${mins}m ` : ''}{remaining}s
+        </span>
+        .
+      </p>
+    </div>
+  )
+}
+
+// ─── Admin Login Panel ────────────────────────────────────────────────────────
 export function AdminLoginPanel() {
-  const router = useRouter()
-  const { isAuthenticated, login } = useAdminAuth()
+  const { login, isRateLimited, rateLimitRemainingMs, attemptsLeft } = useAdminAuth()
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/admin')
-    }
-  }, [isAuthenticated, router])
+    inputRef.current?.focus()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!password.trim() || loading || isRateLimited) return
+
     setError('')
-
-    if (!password.trim()) {
-      setError('Password is required')
-      return
+    setLoading(true)
+    const err = await login(password)
+    if (err) {
+      setError(err)
+      setPassword('')
+      inputRef.current?.focus()
     }
-
-    setIsLoading(true)
-    try {
-      // Simulate a small delay for better UX
-      await new Promise((resolve) => setTimeout(resolve, 300))
-
-      if (login(password)) {
-        // Clear password and redirect
-        setPassword('')
-        router.push('/admin')
-      } else {
-        setError('Invalid password. Please try again.')
-        setPassword('')
-      }
-    } catch (err) {
-      setError('An error occurred. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
+    // On success, login() calls router.replace internally.
+    setLoading(false)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 border border-border/50">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center font-bold text-white mx-auto mb-4">
-              <Lock className="w-8 h-8" />
-            </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-primary mb-2">
-              Admin Access
-            </h1>
-            <p className="text-muted-foreground">
-              Enter your password to access the admin panel
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0f2847 60%, #0a1628 100%)' }}
+    >
+      {/* Subtle dot grid */}
+      <div
+        className="fixed inset-0 opacity-[0.035] pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }}
+      />
+
+      <div className="relative w-full max-w-sm space-y-8">
+        {/* Brand header */}
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20">
+            <Lock className="w-7 h-7 text-accent" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Admin Access</h1>
+            <p className="text-white/40 text-sm mt-1">Dream More Student Platform</p>
+          </div>
+        </div>
+
+        {/* Login card */}
+        <div
+          className="rounded-2xl border border-white/10 p-8 space-y-6"
+          style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)' }}
+        >
+          <div>
+            <h2 className="text-base font-semibold text-white">Sign In</h2>
+            <p className="text-sm text-white/40 mt-0.5">
+              Enter your administrator password to continue.
             </p>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Password Field */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-primary">
-                Admin Password *
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            {isRateLimited && <RateLimitBanner remainingMs={rateLimitRemainingMs} />}
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-widest text-white/50">
+                Admin Password
               </label>
               <div className="relative">
                 <Input
+                  ref={inputRef}
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => {
+                  onChange={e => {
                     setPassword(e.target.value)
                     if (error) setError('')
                   }}
-                  placeholder="Enter admin password"
-                  disabled={isLoading}
-                  className="neomorph-light-sm pr-10"
-                  autoFocus
+                  placeholder="Enter your password"
+                  disabled={loading || isRateLimited}
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-accent/50 focus-visible:border-accent/40 pr-10 h-12"
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                   tabIndex={-1}
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            {/* Error Message */}
             {error && (
-              <div className="flex items-start gap-3 p-4 bg-red-50/80 border border-red-200 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700">{error}</p>
+              <div className="flex items-start gap-3 p-3.5 rounded-lg border border-red-500/30 bg-red-500/10">
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-300">{error}</p>
               </div>
             )}
 
-            {/* Submit Button */}
+            {!isRateLimited && attemptsLeft < 5 && attemptsLeft > 0 && !error && (
+              <p className="text-xs text-yellow-400/80">
+                {attemptsLeft} attempt{attemptsLeft !== 1 ? 's' : ''} remaining before lockout.
+              </p>
+            )}
+
             <Button
               type="submit"
-              disabled={isLoading || !password.trim()}
-              className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white py-6 text-base font-semibold rounded-lg transition-all"
+              disabled={loading || isRateLimited || !password.trim()}
+              className="w-full h-12 bg-accent hover:bg-accent/90 text-primary font-semibold text-sm tracking-wide transition-all"
             >
-              {isLoading ? (
-                <>
-                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-primary/40 border-t-primary rounded-full animate-spin" />
                   Verifying...
-                </>
+                </span>
               ) : (
-                <>
-                  <Lock className="w-4 h-4 mr-2" />
+                <span className="flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
                   Access Admin Panel
-                </>
+                  <ChevronRight className="w-4 h-4 ml-auto" />
+                </span>
               )}
             </Button>
           </form>
-
-          {/* Info Message */}
-          <div className="mt-8 p-4 bg-blue-50/80 border border-blue-200 rounded-lg">
-            <p className="text-xs text-blue-700">
-              <span className="font-semibold">Note:</span> Only authorized administrators can access this panel. Your session will expire after 24 hours of inactivity.
-            </p>
-          </div>
-
-          {/* Back Link */}
-          <div className="mt-6 text-center">
-            <a
-              href="/"
-              className="text-sm text-primary hover:text-accent transition-colors font-medium"
-            >
-              ← Back to Home
-            </a>
-          </div>
         </div>
 
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-xs text-muted-foreground">
-            Dream More Training Center | Secure Admin Panel
-          </p>
+        {/* Security badges */}
+        <SecurityBadges />
+
+        {/* Back to home */}
+        <div className="text-center">
+          <a
+            href="/"
+            className="text-xs text-white/25 hover:text-white/55 transition-colors"
+          >
+            &larr; Back to Homepage
+          </a>
         </div>
       </div>
     </div>

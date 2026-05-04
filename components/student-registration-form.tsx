@@ -73,7 +73,7 @@ export function StudentRegistrationForm() {
         console.error('Error fetching courses:', error)
         toast({
           title: 'Error',
-          description: 'Failed to load courses. Please refresh the page.',
+          description: 'Failed to load courses. Please try again.',
           variant: 'destructive',
         })
       } finally {
@@ -115,7 +115,7 @@ export function StudentRegistrationForm() {
           first_name: formData.first_name,
           last_name: formData.last_name,
           email: formData.email,
-          phone: formData.phone,
+          phone: `${formData.phone_country_code} ${formData.phone}`,
           date_of_birth: formData.date_of_birth,
           gender: formData.gender,
           address: formData.address,
@@ -202,13 +202,18 @@ export function StudentRegistrationForm() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Phone</label>
-              <Input
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="+251 9XX XXX XXXX"
-                className="neomorph-light-sm focus:ring-accent"
-              />
+              <div className="flex items-center">
+                <span className="px-3 py-2 bg-muted text-muted-foreground font-mono text-sm rounded-l-lg border border-r-0 border-border">
+                  +251
+                </span>
+                <Input
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="912345678"
+                  className="neomorph-light-sm focus:ring-accent flex-1 rounded-l-none"
+                />
+              </div>
             </div>
           </div>
 
@@ -277,30 +282,56 @@ export function StudentRegistrationForm() {
           ) : courses.length === 0 ? (
             <p className="text-center text-foreground/70 py-8">No courses available yet.</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {courses.map(course => (
-                <div key={course.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/30 transition-colors">
-                  <Checkbox
-                    id={`course-${course.id}`}
-                    checked={formData.courses.includes(course.id.toString())}
-                    onCheckedChange={() => handleCourseToggle(course.id)}
-                    className="cursor-pointer mt-1"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <label
-                      htmlFor={`course-${course.id}`}
-                      className="text-sm font-medium cursor-pointer text-foreground hover:text-accent transition-colors"
-                    >
-                      {course.course_name}
-                    </label>
-                    {course.description && (
-                      <p className="text-xs text-foreground/60 mt-1 line-clamp-2">
-                        {course.description}
-                      </p>
-                    )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {courses.map(course => {
+                const isSelected = formData.courses.includes(course.id.toString())
+                return (
+                  <div
+                    key={course.id}
+                    onClick={() => handleCourseToggle(course.id)}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-105 ${
+                      isSelected
+                        ? 'border-accent bg-accent/10'
+                        : 'border-muted hover:border-accent/50 bg-muted/20'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id={`course-${course.id}`}
+                        checked={isSelected}
+                        onCheckedChange={(checked) => {
+                          if (checked !== isSelected) {
+                            handleCourseToggle(course.id)
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="cursor-pointer mt-1"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <label
+                          htmlFor={`course-${course.id}`}
+                          className="text-sm font-semibold cursor-pointer text-foreground"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {course.course_name}
+                        </label>
+                        {course.description && (
+                          <p className="text-xs text-foreground/60 mt-1 line-clamp-2">
+                            {course.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
+            </div>
+          )}
+          {formData.courses.length > 0 && (
+            <div className="mt-4 p-3 bg-accent/10 border border-accent/30 rounded-lg">
+              <p className="text-sm font-medium text-foreground">
+                Selected courses: <span className="text-accent font-semibold">{formData.courses.length}</span>
+              </p>
             </div>
           )}
         </CardContent>

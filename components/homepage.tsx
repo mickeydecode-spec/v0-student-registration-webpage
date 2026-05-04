@@ -403,12 +403,20 @@ export function Homepage() {
             </div>
             <div>
               <h4 className="font-semibold text-white mb-3">Contact</h4>
-              <p className="text-sm text-white/80">+251 99 933 132 122</p>
-              <p className="text-sm text-white/80">+251 90 899 3322</p>
+              <p className="text-sm text-white/80">
+                <a href="tel:+251993132122" className="hover:text-accent transition">
+                  +251 99 313 2122
+                </a>
+              </p>
+              <p className="text-sm text-white/80">
+                <a href="tel:+251908993322" className="hover:text-accent transition">
+                  +251 90 899 3322
+                </a>
+              </p>
             </div>
           </div>
           <div className="border-t border-white/10 pt-8 text-center text-white/60 text-sm">
-            <p>&copy; 2024 Dream More Training Center. All rights reserved.</p>
+            <p>&copy; 2026 Dream More Training Center. All rights reserved.</p>
           </div>
         </div>
       </footer>
