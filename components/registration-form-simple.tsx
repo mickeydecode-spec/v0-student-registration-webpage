@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowRight, Loader2 } from 'lucide-react'
@@ -24,7 +25,7 @@ interface FormData {
   gender: string
   address: string
   city: string
-  course_id: string
+  courses: string[]
 }
 
 export function RegistrationFormSimple() {
@@ -41,7 +42,7 @@ export function RegistrationFormSimple() {
     gender: '',
     address: '',
     city: '',
-    course_id: '',
+    courses: [],
   })
 
   // Fetch courses
@@ -68,19 +69,21 @@ export function RegistrationFormSimple() {
     }
   }
 
-  const handleRefreshCourses = async () => {
-    await fetchCourses()
-    toast({
-      title: 'Success',
-      description: 'Courses refreshed successfully',
-    })
-  }
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value,
+    }))
+  }
+
+  const handleCourseToggle = (courseId: number) => {
+    const courseIdStr = courseId.toString()
+    setFormData(prev => ({
+      ...prev,
+      courses: prev.courses.includes(courseIdStr)
+        ? prev.courses.filter(id => id !== courseIdStr)
+        : [...prev.courses, courseIdStr]
     }))
   }
 
@@ -97,8 +100,7 @@ export function RegistrationFormSimple() {
       toast({ title: 'Error', description: 'Valid email is required', variant: 'destructive' })
       return false
     }
-    const fullPhone = `${formData.phone_country_code} ${formData.phone}`.trim()
-    if (!fullPhone || fullPhone === formData.phone_country_code) {
+    if (!formData.phone.trim()) {
       toast({ title: 'Error', description: 'Phone number is required', variant: 'destructive' })
       return false
     }
@@ -118,8 +120,8 @@ export function RegistrationFormSimple() {
       toast({ title: 'Error', description: 'City is required', variant: 'destructive' })
       return false
     }
-    if (!formData.course_id) {
-      toast({ title: 'Error', description: 'Please select a course', variant: 'destructive' })
+    if (formData.courses.length === 0) {
+      toast({ title: 'Error', description: 'Please select at least one course', variant: 'destructive' })
       return false
     }
     return true
@@ -144,7 +146,7 @@ export function RegistrationFormSimple() {
           gender: formData.gender,
           address: formData.address,
           city: formData.city,
-          courses: [formData.course_id],
+          courses: formData.courses.map(id => parseInt(id)),
         },
       ])
 
@@ -165,7 +167,7 @@ export function RegistrationFormSimple() {
         gender: '',
         address: '',
         city: '',
-        course_id: '',
+        courses: [],
       })
     } catch (error) {
       console.error('Registration error:', error)
@@ -304,37 +306,60 @@ export function RegistrationFormSimple() {
           </div>
 
           {/* Course Selection */}
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-primary">Select Your Course *</label>
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-primary">Select Your Courses * (Choose at least one)</label>
             {coursesLoading ? (
-              <div className="flex items-center justify-center py-6 bg-muted/30 rounded-lg">
+              <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-4 h-4 animate-spin text-accent mr-2" />
                 <p className="text-sm text-muted-foreground">Loading courses...</p>
               </div>
             ) : courses.length === 0 ? (
-              <div className="flex items-center justify-center py-6 bg-muted/30 rounded-lg">
+              <div className="flex items-center justify-center py-8 bg-muted/30 rounded-lg">
                 <p className="text-sm text-muted-foreground">No courses available</p>
               </div>
             ) : (
-              <select
-                name="course_id"
-                value={formData.course_id}
-                onChange={handleInputChange}
-                className="w-full px-3 py-3 bg-white border-0 rounded-lg neomorph-light-sm focus:ring-2 focus:ring-accent text-foreground text-base"
-                disabled={formLoading}
-              >
-                <option value="">Choose a course...</option>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {courses.map(course => (
-                  <option key={course.id} value={course.id}>
-                    {course.course_name}
-                  </option>
+                  <div
+                    key={course.id}
+                    onClick={() => handleCourseToggle(course.id)}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-105 ${
+                      formData.courses.includes(course.id.toString())
+                        ? 'border-accent bg-accent/10 shadow-md'
+                        : 'border-muted hover:border-accent/50 bg-muted/20'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id={`course-${course.id}`}
+                        checked={formData.courses.includes(course.id.toString())}
+                        onCheckedChange={() => handleCourseToggle(course.id)}
+                        className="cursor-pointer mt-1 flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <label
+                          htmlFor={`course-${course.id}`}
+                          className="text-sm font-semibold cursor-pointer text-foreground"
+                        >
+                          {course.course_name}
+                        </label>
+                        {course.description && (
+                          <p className="text-xs text-foreground/60 mt-1 line-clamp-2">
+                            {course.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </select>
+              </div>
             )}
-            {formData.course_id && courses.find(c => c.id.toString() === formData.course_id)?.description && (
-              <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted/40 rounded">
-                {courses.find(c => c.id.toString() === formData.course_id)?.description}
-              </p>
+            {formData.courses.length > 0 && (
+              <div className="p-3 bg-accent/10 border border-accent/30 rounded-lg">
+                <p className="text-sm font-medium text-foreground">
+                  Selected: <span className="text-accent font-semibold">{formData.courses.length} course{formData.courses.length !== 1 ? 's' : ''}</span>
+                </p>
+              </div>
             )}
           </div>
 
