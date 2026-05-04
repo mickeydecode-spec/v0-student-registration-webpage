@@ -335,12 +335,6 @@ export function RegistrationFormSimple() {
                         <Checkbox
                           id={`course-${course.id}`}
                           checked={isSelected}
-                          onCheckedChange={(checked) => {
-                            // Only toggle if state actually changes to prevent double-firing
-                            if (checked !== isSelected) {
-                              handleCourseToggle(course.id)
-                            }
-                          }}
                           onClick={(e) => e.stopPropagation()}
                           className="cursor-pointer mt-1 flex-shrink-0"
                         />
