@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
-import { Menu, X, BarChart3, Users, BookOpen, Settings, LogOut } from 'lucide-react'
+import { Menu, X, BarChart3, Users, BookOpen, Settings, LogOut, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAdminAuth } from '@/hooks/use-admin-auth'
 
@@ -21,6 +21,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { icon: BarChart3, label: 'Dashboard', href: '/admin' },
     { icon: Users, label: 'Registrations', href: '/admin/registrations' },
     { icon: BookOpen, label: 'Manage Courses', href: '/admin/manage-courses' },
+    { icon: Download, label: 'Export Data', href: '/admin/export' },
     { icon: Settings, label: 'Settings', href: '/admin/settings' },
   ]
 

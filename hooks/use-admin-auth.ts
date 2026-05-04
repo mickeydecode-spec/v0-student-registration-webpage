@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { adminAuth } from '@/lib/admin-auth'
 
 interface UseAdminAuthReturn {
   isAuthenticated: boolean
   isLoading: boolean
-  login: (password: string) => boolean
+  login: (password: string) => Promise<boolean>
   logout: () => void
   sessionExpiry: number | null
 }
@@ -36,21 +36,25 @@ export function useAdminAuth(): UseAdminAuthReturn {
     }
   }, [])
 
-  const login = (password: string): boolean => {
+  const login = useCallback(async (password: string): Promise<boolean> => {
     if (adminAuth.verifyPassword(password)) {
       adminAuth.createSession()
+      
+      // Wait for localStorage to sync and state to update
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
       setIsAuthenticated(true)
       setSessionExpiry(adminAuth.getSessionExpiry())
       return true
     }
     return false
-  }
+  }, [])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     adminAuth.logout()
     setIsAuthenticated(false)
     setSessionExpiry(null)
-  }
+  }, [])
 
   return {
     isAuthenticated,
@@ -60,3 +64,4 @@ export function useAdminAuth(): UseAdminAuthReturn {
     sessionExpiry,
   }
 }
+

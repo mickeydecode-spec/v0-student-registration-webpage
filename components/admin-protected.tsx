@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useAdminAuth } from '@/hooks/use-admin-auth'
 import { AdminLoginPanel } from '@/components/admin-login-panel'
 
@@ -9,6 +10,12 @@ interface AdminProtectedProps {
 
 export function AdminProtected({ children }: AdminProtectedProps) {
   const { isAuthenticated, isLoading } = useAdminAuth()
+  const [shouldShowLogin, setShouldShowLogin] = useState(false)
+
+  // Sync login visibility with authentication state
+  useEffect(() => {
+    setShouldShowLogin(!isAuthenticated)
+  }, [isAuthenticated])
 
   if (isLoading) {
     return (
@@ -21,9 +28,10 @@ export function AdminProtected({ children }: AdminProtectedProps) {
     )
   }
 
-  if (!isAuthenticated) {
+  if (shouldShowLogin) {
     return <AdminLoginPanel />
   }
 
   return <>{children}</>
 }
+

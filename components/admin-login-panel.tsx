@@ -33,13 +33,15 @@ export function AdminLoginPanel() {
 
     setIsLoading(true)
     try {
-      // Simulate a small delay for better UX
-      await new Promise((resolve) => setTimeout(resolve, 300))
+      // Wait for login to complete (now async)
+      const success = await login(password)
+      
+      // Wait a bit more for state to propagate
+      await new Promise(resolve => setTimeout(resolve, 100))
 
-      if (login(password)) {
-        // Clear password and redirect
+      if (success) {
         setPassword('')
-        router.push('/admin')
+        // Router.push will execute from useEffect once auth state updates
       } else {
         setError('Invalid password. Please try again.')
         setPassword('')
