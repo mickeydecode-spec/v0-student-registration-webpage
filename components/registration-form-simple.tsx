@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowRight, Loader2 } from 'lucide-react'
+import { ArrowRight, Loader2, RefreshCw } from 'lucide-react'
 
 interface Course {
   id: number
@@ -20,6 +20,7 @@ interface FormData {
   last_name: string
   email: string
   phone: string
+  phone_country_code: string
   date_of_birth: string
   gender: string
   address: string
@@ -37,6 +38,7 @@ export function RegistrationFormSimple() {
     last_name: '',
     email: '',
     phone: '',
+    phone_country_code: '+251',
     date_of_birth: '',
     gender: '',
     address: '',
@@ -60,7 +62,7 @@ export function RegistrationFormSimple() {
       console.error('Error fetching courses:', error)
       toast({
         title: 'Error',
-        description: 'Failed to load courses. Please refresh the page.',
+        description: 'Failed to load courses. Please try again.',
         variant: 'destructive',
       })
     } finally {
@@ -68,11 +70,27 @@ export function RegistrationFormSimple() {
     }
   }
 
+  const handleRefreshCourses = async () => {
+    await fetchCourses()
+    toast({
+      title: 'Success',
+      description: 'Courses refreshed successfully',
+    })
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value,
+    }))
+  }
+
+  const handlePhoneCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value
+    setFormData(prev => ({
+      ...prev,
+      phone_country_code: value,
     }))
   }
 
@@ -89,7 +107,8 @@ export function RegistrationFormSimple() {
       toast({ title: 'Error', description: 'Valid email is required', variant: 'destructive' })
       return false
     }
-    if (!formData.phone.trim()) {
+    const fullPhone = `${formData.phone_country_code} ${formData.phone}`.trim()
+    if (!fullPhone || fullPhone === formData.phone_country_code) {
       toast({ title: 'Error', description: 'Phone number is required', variant: 'destructive' })
       return false
     }
@@ -130,7 +149,7 @@ export function RegistrationFormSimple() {
           first_name: formData.first_name,
           last_name: formData.last_name,
           email: formData.email,
-          phone: formData.phone,
+          phone: `${formData.phone_country_code} ${formData.phone}`,
           date_of_birth: formData.date_of_birth,
           gender: formData.gender,
           address: formData.address,
@@ -152,6 +171,7 @@ export function RegistrationFormSimple() {
         last_name: '',
         email: '',
         phone: '',
+        phone_country_code: '+251',
         date_of_birth: '',
         gender: '',
         address: '',
@@ -223,14 +243,33 @@ export function RegistrationFormSimple() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold text-primary">Phone *</label>
-              <Input
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="+1 (555) 000-0000"
-                className="neomorph-light-sm focus:ring-2 focus:ring-accent border-0"
-                disabled={formLoading}
-              />
+              <div className="flex gap-2">
+                <select
+                  value={formData.phone_country_code}
+                  onChange={handlePhoneCountryChange}
+                  className="w-24 px-3 py-2 bg-white border-0 rounded-lg neomorph-light-sm focus:ring-2 focus:ring-accent text-foreground font-mono"
+                  disabled={formLoading}
+                >
+                  <option value="+251">Ethiopia (+251)</option>
+                  <option value="+1">USA/Canada (+1)</option>
+                  <option value="+44">UK (+44)</option>
+                  <option value="+91">India (+91)</option>
+                  <option value="+86">China (+86)</option>
+                  <option value="+81">Japan (+81)</option>
+                  <option value="+234">Nigeria (+234)</option>
+                  <option value="+27">South Africa (+27)</option>
+                  <option value="+255">Tanzania (+255)</option>
+                  <option value="+256">Uganda (+256)</option>
+                </select>
+                <Input
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="912345678"
+                  className="neomorph-light-sm focus:ring-2 focus:ring-accent border-0 flex-1"
+                  disabled={formLoading}
+                />
+              </div>
             </div>
           </div>
 
@@ -291,7 +330,20 @@ export function RegistrationFormSimple() {
 
           {/* Course Selection */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-primary">Select Your Course *</label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-primary">Select Your Course *</label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleRefreshCourses}
+                disabled={coursesLoading || formLoading}
+                className="h-6 w-6 p-0"
+                title="Refresh courses"
+              >
+                <RefreshCw className={`w-4 h-4 text-accent ${coursesLoading ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
             {coursesLoading ? (
               <div className="flex items-center justify-center py-6 bg-muted/30 rounded-lg">
                 <Loader2 className="w-4 h-4 animate-spin text-accent mr-2" />
@@ -312,7 +364,7 @@ export function RegistrationFormSimple() {
                 <option value="">Choose a course...</option>
                 {courses.map(course => (
                   <option key={course.id} value={course.id}>
-                    {course.course_name} ({course.course_code})
+                    {course.course_name}
                   </option>
                 ))}
               </select>
