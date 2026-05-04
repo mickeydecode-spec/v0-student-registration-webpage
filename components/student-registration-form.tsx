@@ -283,39 +283,48 @@ export function StudentRegistrationForm() {
             <p className="text-center text-foreground/70 py-8">No courses available yet.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {courses.map(course => (
-                <div
-                  key={course.id}
-                  onClick={() => handleCourseToggle(course.id)}
-                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-105 ${
-                    formData.courses.includes(course.id.toString())
-                      ? 'border-accent bg-accent/10'
-                      : 'border-muted hover:border-accent/50 bg-muted/20'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      id={`course-${course.id}`}
-                      checked={formData.courses.includes(course.id.toString())}
-                      onCheckedChange={() => handleCourseToggle(course.id)}
-                      className="cursor-pointer mt-1"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <label
-                        htmlFor={`course-${course.id}`}
-                        className="text-sm font-semibold cursor-pointer text-foreground"
-                      >
-                        {course.course_name}
-                      </label>
-                      {course.description && (
-                        <p className="text-xs text-foreground/60 mt-1 line-clamp-2">
-                          {course.description}
-                        </p>
-                      )}
+              {courses.map(course => {
+                const isSelected = formData.courses.includes(course.id.toString())
+                return (
+                  <div
+                    key={course.id}
+                    onClick={() => handleCourseToggle(course.id)}
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all transform hover:scale-105 ${
+                      isSelected
+                        ? 'border-accent bg-accent/10'
+                        : 'border-muted hover:border-accent/50 bg-muted/20'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id={`course-${course.id}`}
+                        checked={isSelected}
+                        onCheckedChange={(checked) => {
+                          if (checked !== isSelected) {
+                            handleCourseToggle(course.id)
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="cursor-pointer mt-1"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <label
+                          htmlFor={`course-${course.id}`}
+                          className="text-sm font-semibold cursor-pointer text-foreground"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {course.course_name}
+                        </label>
+                        {course.description && (
+                          <p className="text-xs text-foreground/60 mt-1 line-clamp-2">
+                            {course.description}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
           {formData.courses.length > 0 && (
