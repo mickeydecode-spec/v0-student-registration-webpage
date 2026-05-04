@@ -6,12 +6,44 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
+import { useAdminAuth } from '@/hooks/use-admin-auth'
+import { Shuffle, RotateCcw, CheckCircle2, Link2 } from 'lucide-react'
 
 export function AdminSettings() {
   const { toast } = useToast()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
+
+  // Redirect URL state
+  const { redirectPath, setRedirectPath, generateRandomRedirect, resetRedirect } =
+    useAdminAuth()
+  const [redirectValue, setRedirectValue] = useState(redirectPath)
+  const [redirectSaved, setRedirectSaved] = useState(false)
+
+  useEffect(() => {
+    setRedirectValue(redirectPath)
+  }, [redirectPath])
+
+  const handleSaveRedirect = () => {
+    if (!redirectValue.trim()) return
+    setRedirectPath(redirectValue.trim())
+    setRedirectSaved(true)
+    setTimeout(() => setRedirectSaved(false), 2500)
+    toast({ title: 'Redirect URL updated', description: `Admins will be sent to ${redirectValue.trim()} after login.` })
+  }
+
+  const handleGenerateRedirect = () => {
+    generateRandomRedirect()
+    setRedirectSaved(false)
+  }
+
+  const handleResetRedirect = () => {
+    resetRedirect()
+    setRedirectValue('/admin')
+    setRedirectSaved(false)
+    toast({ title: 'Redirect reset', description: 'Post-login redirect set back to /admin.' })
+  }
 
   const supabase = createClient()
 
@@ -82,7 +114,8 @@ export function AdminSettings() {
   }
 
   return (
-    <Card className="max-w-2xl interactive-shadow border-border/50">
+    <div className="space-y-6 max-w-2xl">
+    <Card className="interactive-shadow border-border/50">
       <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5">
         <CardTitle>Admin Settings</CardTitle>
         <CardDescription>Configure application settings</CardDescription>
@@ -123,5 +156,74 @@ export function AdminSettings() {
         </form>
       </CardContent>
     </Card>
+
+    {/* Redirect URL Card */}
+    <Card className="interactive-shadow border-border/50">
+      <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5">
+        <CardTitle className="flex items-center gap-2">
+          <Link2 className="w-4 h-4" />
+          Post-Login Redirect URL
+        </CardTitle>
+        <CardDescription>
+          Configure where admins are redirected after a successful login. Use a random path
+          to obscure the admin panel location.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6 space-y-5">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Redirect Path</label>
+          <div className="flex gap-2">
+            <Input
+              value={redirectValue}
+              onChange={e => { setRedirectValue(e.target.value); setRedirectSaved(false) }}
+              placeholder="/admin"
+              className="neomorph-light-sm font-mono text-sm"
+            />
+            <Button
+              type="button"
+              onClick={handleSaveRedirect}
+              disabled={!redirectValue.trim() || redirectValue === redirectPath}
+              className="bg-primary hover:bg-primary/90 text-white font-semibold shrink-0"
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGenerateRedirect}
+            className="flex-1 gap-2 border-border/60"
+          >
+            <Shuffle className="w-4 h-4" />
+            Generate Random
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleResetRedirect}
+            className="flex-1 gap-2 border-border/60"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Reset to Default
+          </Button>
+        </div>
+
+        <div className="p-3.5 rounded-lg bg-muted/50 border border-border/50">
+          <p className="text-xs text-muted-foreground mb-1">Active redirect path</p>
+          <p className="font-mono text-sm text-primary break-all">{redirectPath}</p>
+        </div>
+
+        {redirectSaved && (
+          <div className="flex items-center gap-2 p-3 rounded-lg border border-green-200 bg-green-50">
+            <CheckCircle2 className="w-4 h-4 text-green-600" />
+            <p className="text-sm text-green-700">Redirect path saved successfully.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+    </div>
   )
 }
